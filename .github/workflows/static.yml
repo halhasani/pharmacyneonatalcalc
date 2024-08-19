@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neonatal IV Fluid Calculator</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            background-color: #fff;
+        }
+        .form-group {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        label {
+            flex: 1;
+            font-size: 1em;
+        }
+        input[type="number"] {
+            width: 100px;
+            padding: 5px;
+            margin-left: 10px;
+            box-sizing: border-box;
+        }
+        .small-text {
+            font-size: 0.9em;
+            color: #666;
+            margin-left: 10px;
+            font-style: italic;
+        }
+        .button-group {
+            text-align: center;
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 1em;
+            margin: 5px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+        .calculate-button {
+            background-color: #3b5998;
+            color: white;
+        }
+        .reset-button {
+            background-color: #f1f1f1;
+            color: #333;
+        }
+        .caption {
+            text-align: center;
+            font-size: 0.9em;
+            margin-top: 20px;
+            color: #666; /* Slightly lighter color for secondary text */
+        }
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+            background-color: #FFEA00;
+            font-size: 0.9em;
+        }
+        th, td {
+            border: 1.5pt solid #ccc;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f0f0f0;
+        }
+        .result-text {
+            font-size: 1.2em;
+            color: red;
+            font-weight: bold;
+        }
+        .formulas {
+            margin-top: 20px;
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+        }
+        .formula {
+            margin-bottom: 10px;
+        }
+        .formula h4 {
+            margin: 0;
+            text-decoration: underline;
+        }
+        .formula p {
+            margin: 5px 0 0 0;
+            font-family: monospace;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Neonatal IV Fluid Calculator</h2>
+        <div class="form-group">
+            <label for="weight">Baby's Weight (kg):</label>
+            <input type="number" id="weight" step="0.01">
+        </div>
+        <div class="form-group">
+            <label for="sodiumRequirement">Sodium Requirement (mmol/kg/day): <span class="small-text">(Usual requirement 3mmol/kg/day)</span></label>
+            <input type="number" id="sodiumRequirement" step="0.1">
+        </div>
+        <div class="form-group">
+            <label for="potassiumRequirement">Potassium Requirement (mmol/kg/day): <span class="small-text">(Usual requirement 2mmol/kg/day)</span></label>
+            <input type="number" id="potassiumRequirement" step="0.1">
+        </div>
+        <div class="form-group">
+            <label for="fluidRequirement">Total Fluid Requirement (mL/kg/day):</label>
+            <input type="number" id="fluidRequirement" step="1">
+        </div>
+        <div class="button-group">
+            <button class="calculate-button" onclick="calculate()">Calculate</button>
+            <button class="reset-button" onclick="resetForm()">Reset</button>
+        </div>
+        <div class="caption">
+            <p>This is what the answers would look like on the drug chart:</p>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th rowspan="2">Date</th>
+                    <th rowspan="2">Start Time</th>
+                    <th colspan="2">Additions to Infusion</th>
+                    <th colspan="2">Infusion Fluid</th>
+                    <th rowspan="2">IV/SC</th>
+                    <th rowspan="2">ml/hr</th>
+                    <th rowspan="2">Signature</th>
+                </tr>
+                <tr>
+                    <th>Drug</th>
+                    <th>Dose</th>
+                    <th>Type/Strength</th>
+                    <th>Volume</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td rowspan="2">x/y/z</td>
+                    <td rowspan="2">09:00</td>
+                    <td>30% Sodium Chloride</td>
+                    <td><span id="sodiumResult" class="result-text"></span> mmol</td>
+                    <td rowspan="2">Glucose 10%</td>
+                    <td rowspan="2">500 mL</td>
+                    <td rowspan="2">IV</td>
+                    <td rowspan="2"><span id="rateResult" class="result-text"></span></td>
+                    <td rowspan="2">A. Doctor</td>
+                </tr>
+                <tr>
+                    <td>15% Potassium Chloride</td>
+                    <td><span id="potassiumResult" class="result-text"></span> mmol</td>
+                </tr>
+                <tr>
+                    <td colspan="9">
+                        <div><span id="fluidRequirementResult" class="result-text"></span> mL/kg/day – Total Fluid Requirement</div>
+                        <div><span id="sodiumRequirementResult" class="result-text"></span> mmol/kg/day of Sodium</div>
+                        <div><span id="potassiumRequirementResult" class="result-text"></span> mmol/kg/day of Potassium</div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="formulas">
+            <h3>Summary Formulas</h3>
+            <div class="formula">
+                <h4>Total Daily Sodium Requirement (mmol/day):</h4>
+                <p>$$ \text{Total Daily Sodium Requirement} = \text{Sodium Requirement (mmol/kg/day)} \times \text{Baby's Weight (kg)} $$</p>
+            </div>
+            <div class="formula">
+                <h4>Total Daily Potassium Requirement (mmol/day):</h4>
+                <p>$$ \text{Total Daily Potassium Requirement} = \text{Potassium Requirement (mmol/kg/day)} \times \text{Baby's Weight (kg)} $$</p>
+            </div>
+            <div class="formula">
+                <h4>Total Daily Fluid Requirement (mL/day):</h4>
+                <p>$$ \text{Total Daily Fluid} = \text{Total Fluid Requirement (mL/kg/day)} \times \text{Baby's Weight (kg)} $$</p>
+            </div>
+            <div class="formula">
+                <h4>Infusion Rate (mL/hr):</h4>
+                <p>$$ \text{Infusion Rate} = \frac{\text{Total Daily Fluid (mL/day)}}{24} $$</p>
+            </div>
+            <div class="formula">
+                <h4>Total Sodium Needed (mmol):</h4>
+                <p>$$ \text{Total Sodium Needed} = \left( \frac{\text{Total Daily Sodium Requirement (mmol/day)}}{\text{Total Daily Fluid (mL/day)}} \right) \times 500 \, \text{mL} $$</p>
+            </div>
+            <div class="formula">
+                <h4>Total Potassium Needed (mmol):</h4>
+                <p>$$ \text{Total Potassium Needed} = \left( \frac{\text{Total Daily Potassium Requirement (mmol/day)}}{\text{Total Daily Fluid (mL/day)}} \right) \times 500 \, \text{mL} $$</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function calculate() {
+            const weight = parseFloat(document.getElementById('weight').value);
+            const sodiumRequirement = parseFloat(document.getElementById('sodiumRequirement').value);
+            const potassiumRequirement = parseFloat(document.getElementById('potassiumRequirement').value);
+            const fluidRequirement = parseFloat(document.getElementById('fluidRequirement').value);
+
+            if (weight < 0.4 || weight > 10) {
+                alert("Weight must be between 0.4kg and 10kg");
+                return;
+            }
+            if (fluidRequirement < 30 || fluidRequirement > 250) {
+                alert("The total fluid intake must be between 30 and 250 ml/kg/day");
+                return;
+            }
+            if (sodiumRequirement < 0 || sodiumRequirement > 10) {
+                alert("The Sodium must be between 0 and 10 mmol/kg/day");
+                return;
+            }
+            if (potassiumRequirement < 0 || potassiumRequirement > 6) {
+                alert("The Potassium must be between 0 and 6 mmol/kg/day");
+                return;
+            }
+
+            const dailySodiumRequirement = sodiumRequirement * weight;
+            const dailyPotassiumRequirement = potassiumRequirement * weight;
+            const totalDailyFluid = fluidRequirement * weight;
+            const infusionRate = totalDailyFluid / 24;
+
+            const totalSodiumNeeded = (dailySodiumRequirement / totalDailyFluid) * 500;
+            const totalPotassiumNeeded = (dailyPotassiumRequirement / totalDailyFluid) * 500;
+
+            document.getElementById('sodiumResult').innerHTML = `${totalSodiumNeeded.toFixed(1)}`;
+            document.getElementById('potassiumResult').innerHTML = `${totalPotassiumNeeded.toFixed(1)}`;
+            document.getElementById('rateResult').innerHTML = `${infusionRate.toFixed(1)}`;
+            document.getElementById('fluidRequirementResult').innerHTML = `${fluidRequirement.toFixed(1)}`;
+            document.getElementById('sodiumRequirementResult').innerHTML = `${sodiumRequirement.toFixed(1)}`;
+            document.getElementById('potassiumRequirementResult').innerHTML = `${potassiumRequirement.toFixed(1)}`;
+        }
+
+        function resetForm() {
+            document.getElementById('weight').value = '';
+            document.getElementById('sodiumRequirement').value = '';
+            document.getElementById('potassiumRequirement').value = '';
+            document.getElementById('fluidRequirement').value = '';
+            document.getElementById('sodiumResult').innerHTML = '';
+            document.getElementById('potassiumResult').innerHTML = '';
+            document.getElementById('rateResult').innerHTML = '';
+            document.getElementById('fluidRequirementResult').innerHTML = '';
+            document.getElementById('sodiumRequirementResult').innerHTML = '';
+            document.getElementById('potassiumRequirementResult').innerHTML = '';
+        }
+    </script>
+</body>
+</html>
